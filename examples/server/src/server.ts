@@ -9,6 +9,7 @@ import {PostDetails} from './entities/postDetails';
 import {DataFilling1577087002356} from './migrations/1577087002356-dataFilling';
 import {createConnection} from './db/createConnection';
 import config from './config';
+import * as ormconfig from './ormconfig.json'
 
 export default (async () => {
   try {
@@ -18,7 +19,7 @@ export default (async () => {
       Post,
       PostCategory,
       PostDetails
-    ], [DataFilling1577087002356], dbConfig);
+    ], [DataFilling1577087002356], {...dbConfig, ...ormconfig});
 
     const app = express();
 
