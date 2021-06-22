@@ -1,5 +1,5 @@
-import {Column, Entity, PrimaryGeneratedColumn} from 'typeorm';
-
+import {Column, Entity, ManyToOne, PrimaryGeneratedColumn} from 'typeorm';
+import {Document} from  './document'
 @Entity('post_category')
 export class PostCategory {
 
@@ -8,4 +8,7 @@ export class PostCategory {
 
   @Column()
   name: string;
+
+  @ManyToOne(type => Document)
+  document: Document[];
 }

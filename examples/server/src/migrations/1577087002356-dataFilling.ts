@@ -3,20 +3,24 @@ import {MigrationInterface, QueryRunner} from 'typeorm';
 export class DataFilling1577087002356 implements MigrationInterface {
 
   async up(queryRunner: QueryRunner): Promise<any> {
-    await queryRunner.query(`INSERT INTO "authors" (id,name) 
+    await queryRunner.query(`INSERT INTO "documents" (id,name) 
                                     VALUES 
-                                      (1,'Ursula Manning'),
-                                      (2,'Carly Butler'),
-                                      (3,'Maggy Juarez'),
-                                      (4,'Colette Murray'),
-                                      (5,'Emmanuel Salinas')`);
-    await queryRunner.query(`INSERT INTO "post_category" (id,name) 
+                                      (1,'Document1'),
+                                      (2,'Document2')`);
+    await queryRunner.query(`INSERT INTO "authors" (id,name,document_id) 
                                     VALUES 
-                                      (1,'Eu Nulla Limited'),
-                                      (2,'Montes Nascetur'),
-                                      (3,'Sem Incorporated'),
-                                      (4,'Sit Amet Consectetuer Limited'),
-                                      (5,'Nisl')`);
+                                      (1,'Ursula Manning',1),
+                                      (2,'Carly Butler',1),
+                                      (3,'Maggy Juarez',2),
+                                      (4,'Colette Murray',1),
+                                      (5,'Emmanuel Salinas',2)`);
+    await queryRunner.query(`INSERT INTO "post_category" (id,name,document_id) 
+                                    VALUES 
+                                      (1,'Eu Nulla Limited',1),
+                                      (2,'Montes Nascetur',2),
+                                      (3,'Sem Incorporated',1),
+                                      (4,'Sit Amet Consectetuer Limited',2),
+                                      (5,'Nisl',2)`);
     await queryRunner.query(`INSERT INTO "posts" (id,title,text,category_id,author_id) 
                                     VALUES 
                                       (1,'Ultricies Sem Ltd','quam. Curabitur vel lectus. Cum',1,1),
@@ -29,6 +33,8 @@ export class DataFilling1577087002356 implements MigrationInterface {
                                       (8,'In Hendrerit Consectetuer Foundation','vulputate, nisi sem semper erat,',3,3),
                                       (9,'Odio Aliquam Vulputate Foundation','velit eget',4,4),
                                       (10,'Cursus Ltd','ac mattis ornare, lectus ante dictum mi, ac mattis velit',5,5)`);
+                                   
+
   }
 
   async down(queryRunner: QueryRunner): Promise<any> {
