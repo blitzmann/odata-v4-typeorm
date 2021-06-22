@@ -6,8 +6,7 @@ export class TypeOrmVisitor extends Visitor {
   includes: TypeOrmVisitor[] = [];
   alias: string = '';
   // all other ones are sorted at the front
-  private queryOptionsSort = [TokenType.Select, TokenType.Expand, TokenType.Filter]
-  private expands: {[key: string]: string} = {};
+  private queryOptionsSort = [TokenType.Expand, TokenType.Filter, TokenType.Select]
 
   constructor(options) {
     super(options);
@@ -30,10 +29,9 @@ export class TypeOrmVisitor extends Visitor {
       .sort((a:Token, b: Token)=>this.queryOptionsSort.indexOf(a.type) - this.queryOptionsSort.indexOf(b.type))
       .forEach((option) => this.Visit(option, context));
   }
-
   protected VisitExpand(node: Token, context: any) {
     node.value.items.forEach((item) => {
-      let expandPath = item.value.path.raw;
+      let expandPath = item.value.path.raw + item.position;
       let visitor = this.includes.filter(v => v.navigationProperty == expandPath)[0];
       if (!visitor) {
         visitor = new TypeOrmVisitor({...this.options, alias: expandPath});
@@ -44,8 +42,6 @@ export class TypeOrmVisitor extends Visitor {
 
       if (visitor.select && visitor.select !== '*') {
         this.select += ((this.select && !this.select.trim().endsWith(',') ? ',' : '') + visitor.select);
-      } else if (this.expands[expandPath]) {
-        visitor.select = this.expands[expandPath];
       }
       this.parameterSeed = visitor.parameterSeed;
     });
@@ -53,18 +49,16 @@ export class TypeOrmVisitor extends Visitor {
 
   protected VisitSelectItem(node: Token, context: any) {
     if (node.raw.includes('/')) {
-      const item = node.raw.replace(/\//g, '.');
-      this.select += item;
-      const itemSplit = item.split('.');
+      const itemSplit = node.raw.split('/');
       const itemName = itemSplit[0];
-      this.expands[itemName] = this.expands[itemName] || '';
-      this.expands[itemName] +=
-        ((this.expands[itemName] && !this.expands[itemName].trim().endsWith(',') ? ',' : '') + item);
+      const alias = this.includes.find(x=>x.navigationProperty === itemName).alias;
+      this.select += `${alias}.${itemSplit[1]}`;
       return;
     }
 
     let item = node.raw.replace(/\//g, '.');
-    this.select += this.getIdentifier(item, context.identifier);
+    
+    this.select += ((this.select && !this.select.trim().endsWith(',') ? ',' : '') + this.getIdentifier(item, context.identifier));
   }
 
   protected VisitPropertyPathExpression(node: Token, context: any) {

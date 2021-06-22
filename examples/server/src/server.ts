@@ -1,11 +1,12 @@
 import express from 'express';
-import {odataQuery} from 'odata-v4-typeorm';
+import {odataQuery} from '../../../';
 import {getConnection, getRepository} from 'typeorm';
 
 import {Author} from './entities/author';
 import {Post} from './entities/post';
 import {PostCategory} from './entities/postCategory';
 import {PostDetails} from './entities/postDetails';
+import {Document} from './entities/document';
 import {DataFilling1577087002356} from './migrations/1577087002356-dataFilling';
 import {createConnection} from './db/createConnection';
 import config from './config';
@@ -18,7 +19,8 @@ export default (async () => {
       Author,
       Post,
       PostCategory,
-      PostDetails
+      PostDetails,
+      Document
     ], [DataFilling1577087002356], {...dbConfig, ...ormconfig});
 
     const app = express();
@@ -30,6 +32,23 @@ export default (async () => {
       return req.status(200).json(metadata)
     });
     app.get('/api/posts', odataQuery(postsRepository));
+
+    app.get('/api/posts/test', (res, req) => {
+      const test = getConnection().getMetadata(Post);
+      getRepository(Post)
+        .createQueryBuilder('Post')
+        // .andWhere('author23.id = :p0').setParameters({'p0': 1})
+        .select(['Post.id','category33.id','document50.id'])
+
+        .leftJoinAndSelect('Post.author', 'author8', '1 = 1')
+        .leftJoinAndSelect('author8.document', 'document23', '1 = 1')
+        .leftJoinAndSelect('Post.category', 'category33', '1 = 1')
+        .leftJoin('category33.document', 'document50', '1 = 1')
+
+        .getMany().then((data)=>{
+          req.status(200).json(data)
+        })
+    });
 
     // Authors
     const authorsRepository = getRepository(Author);

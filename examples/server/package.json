@@ -25,6 +25,7 @@
     "mssql": "^7.1.3",
     "odata-v4-typeorm": "file:../..",
     "pg": "^7.14.0",
+    "sqlite3": "^5.0.2",
     "typeorm": "^0.2.21"
   },
   "devDependencies": {
