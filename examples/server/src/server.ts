@@ -11,6 +11,8 @@ import {DataFilling1577087002356} from './migrations/1577087002356-dataFilling';
 import {createConnection} from './db/createConnection';
 import config from './config';
 import * as ormconfig from './ormconfig.json'
+import { User } from './entities/user';
+import { PostComment } from './entities/postComment';
 
 export default (async () => {
   try {
@@ -19,7 +21,9 @@ export default (async () => {
       Author,
       Post,
       PostCategory,
-      PostDetails
+      PostDetails,
+      PostComment,
+      User
     ], [DataFilling1577087002356], {...dbConfig, ...ormconfig});
 
     const app = express();
