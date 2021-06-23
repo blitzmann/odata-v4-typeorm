@@ -6,7 +6,7 @@ import {Author} from './entities/author';
 import {Post} from './entities/post';
 import {PostCategory} from './entities/postCategory';
 import {PostDetails} from './entities/postDetails';
-import {Document} from './entities/document';
+
 import {DataFilling1577087002356} from './migrations/1577087002356-dataFilling';
 import {createConnection} from './db/createConnection';
 import config from './config';
@@ -19,8 +19,7 @@ export default (async () => {
       Author,
       Post,
       PostCategory,
-      PostDetails,
-      Document
+      PostDetails
     ], [DataFilling1577087002356], {...dbConfig, ...ormconfig});
 
     const app = express();

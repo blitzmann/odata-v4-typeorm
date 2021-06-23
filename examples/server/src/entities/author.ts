@@ -1,6 +1,5 @@
 import {Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn} from 'typeorm';
 import {Post} from './post';
-import {Document} from './document';
 
 @Entity('authors')
 export class Author {
@@ -13,8 +12,5 @@ export class Author {
 
   @OneToMany(type => Post, post => post.author)
   posts: Post[];
-
-  @ManyToOne(type => Document)
-  document: Document[];
 
 }
