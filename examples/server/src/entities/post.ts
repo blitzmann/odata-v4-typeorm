@@ -32,7 +32,4 @@ export class Post {
   @ManyToOne(type => Author, author => author.posts)
   author: Author;
 
-  @ManyToOne(type => Author)
-  editor: Author;
-
 }
