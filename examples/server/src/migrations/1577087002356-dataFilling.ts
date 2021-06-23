@@ -17,7 +17,6 @@ export class DataFilling1577087002356 implements MigrationInterface {
                                       (3,'Sem Incorporated'),
                                       (4,'Sit Amet Consectetuer Limited'),
                                       (5,'Nisl')`);
-                                    VALUES 
     await queryRunner.query(`INSERT INTO "posts" (id,title,text,category_id,author_id) 
                                     VALUES 
                                       (1,'Ultricies Sem Ltd','quam. Curabitur vel lectus. Cum',1,1),
