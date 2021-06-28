@@ -10,6 +10,15 @@ into SQL query statements, that you can execute over a TYPEORM.
 
 - Create high speed, standard compliant data sharing APIs
 
+## Example server
+
+The example server will automatically reflect the main project and automatically re-build on changes.
+```
+cd examples/server
+npm install
+npm run serve
+```
+
 ## Usage as server - TypeScript
 example request:  GET /api/users?$filter=id eq 42&$select=id,name
 ## NestJS middleware
