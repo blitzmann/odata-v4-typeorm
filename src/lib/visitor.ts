@@ -24,7 +24,7 @@ export class TypeOrmVisitor extends Visitor {
     return sql;
   }
 
-  proected VisitQueryOptions(node: Token, context: any) {
+  protected VisitQueryOptions(node: Token, context: any) {
     node.value.options
       .sort((a:Token, b: Token)=>this.queryOptionsSort.indexOf(a.type) - this.queryOptionsSort.indexOf(b.type))
       .forEach((option) => this.Visit(option, context));
