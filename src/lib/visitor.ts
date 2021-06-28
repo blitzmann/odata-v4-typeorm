@@ -44,6 +44,9 @@ export class TypeOrmVisitor extends Visitor {
   }
 
   protected VisitSelectItem(node: Token, context: any) {
+    if (this.select !== '' && !this.select.trim().endsWith(',')) {
+      this.select += ', ';
+    }
     if (node.raw.includes('/')) {
       const itemSplit = node.raw.split('/');
       const itemName = itemSplit[0];
