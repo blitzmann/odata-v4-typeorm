@@ -1,6 +1,6 @@
 {
-  "name": "odata-v4-typeorm",
-  "version": "0.1.1",
+  "name": "@the_blitzmann/odata-v4-typeorm",
+  "version": "0.0.2",
   "description": "OData to TYPEORM query compiler",
   "main": "build/lib/index.js",
   "typings": "build/lib/index",
@@ -10,16 +10,15 @@
   "scripts": {
     "build": "tsc",
     "pretest": "npm run build",
-    "test": "mocha",
+    "test": "jest",
     "pretdd": "npm run build",
-    "tdd": "mocha -w",
     "release": "npm run build && npm publish",
     "release:beta": "npm run build && npm publish --tag beta",
     "server": "cd ./examples/server && npm run start"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/andryuha49/odata-v4-typeorm.git"
+    "url": "git+https://github.com/blitzmann/odata-v4-typeorm.git"
   },
   "keywords": [
     "typeorm",
@@ -31,24 +30,26 @@
     "sql",
     "node"
   ],
-  "author": "andryuha49",
+  "author": "blitzmann",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/andryuha49/odata-v4-typeorm/issues"
+    "url": "https://github.com/blitzmann/odata-v4-typeorm/issues"
   },
-  "homepage": "https://github.com/andryuha49/odata-v4-typeorm#readme",
+  "homepage": "https://github.com/blitzmann/odata-v4-typeorm#readme",
   "dependencies": {
     "odata-v4-parser": "^0.1.29",
     "odata-v4-sql": "^0.1.2"
   },
   "devDependencies": {
-    "@types/config": "^0.0.30",
-    "@types/pg": "^6.1.34",
-    "chai": "^3.5.0",
+    "@types/config": "^0.0.38",
+    "@types/jest": "^26.0.23",
+    "@types/node": "^15.12.4",
+    "@types/pg": "^8.6.0",
     "config": "^1.21.0",
-    "mocha": "^6.2.2",
+    "jest": "^27.0.5",
     "odata-v4-server": "rc",
     "pg": "^6.1.0",
-    "typescript": "^2.0.6"
+    "ts-jest": "^27.0.3",
+    "typescript": "^4.3.4"
   }
 }

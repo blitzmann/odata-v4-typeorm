@@ -1,14 +1,14 @@
 import express from 'express';
-import {odataQuery} from '../../../';
-import {getConnection, getRepository} from 'typeorm';
+import { odataQuery } from '../../../';
+import { getConnection, getRepository } from 'typeorm';
 
-import {Author} from './entities/author';
-import {Post} from './entities/post';
-import {PostCategory} from './entities/postCategory';
-import {PostDetails} from './entities/postDetails';
+import { Author } from './entities/author';
+import { Post } from './entities/post';
+import { PostCategory } from './entities/postCategory';
+import { PostDetails } from './entities/postDetails';
 
-import {DataFilling1577087002356} from './migrations/1577087002356-dataFilling';
-import {createConnection} from './db/createConnection';
+import { DataFilling1577087002356 } from './migrations/1577087002356-dataFilling';
+import { createConnection } from './db/createConnection';
 import config from './config';
 import * as ormconfig from './ormconfig.json'
 import { User } from './entities/user';
@@ -24,7 +24,7 @@ export default (async () => {
       PostDetails,
       PostComment,
       User
-    ], [DataFilling1577087002356], {...dbConfig, ...ormconfig});
+    ], [DataFilling1577087002356], { ...dbConfig, ...ormconfig });
 
     const app = express();
 
@@ -41,14 +41,14 @@ export default (async () => {
       getRepository(Post)
         .createQueryBuilder('Post')
         // .andWhere('author23.id = :p0').setParameters({'p0': 1})
-        .select(['Post.id','category33.id','document50.id'])
+        .select(['Post.id', 'category33.id', 'document50.id'])
 
         .leftJoinAndSelect('Post.author', 'author8', '1 = 1')
         .leftJoinAndSelect('author8.document', 'document23', '1 = 1')
         .leftJoinAndSelect('Post.category', 'category33', '1 = 1')
         .leftJoin('category33.document', 'document50', '1 = 1')
 
-        .getMany().then((data)=>{
+        .getMany().then((data) => {
           req.status(200).json(data)
         })
     });
