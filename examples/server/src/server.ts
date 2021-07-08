@@ -1,5 +1,5 @@
 import express from 'express';
-import { odataQuery } from '../../../';
+import { odataQuery, executeQuery, processBaseBuilder, processIncludes, processRootSelect, processFilter } from '../../../';
 import { getConnection, getRepository } from 'typeorm';
 
 import { Author } from './entities/author';
@@ -36,21 +36,33 @@ export default (async () => {
     });
     app.get('/api/posts', odataQuery(postsRepository));
 
-    app.get('/api/posts/test', (res, req) => {
-      const test = getConnection().getMetadata(Post);
-      getRepository(Post)
-        .createQueryBuilder('Post')
-        // .andWhere('author23.id = :p0').setParameters({'p0': 1})
-        .select(['Post.id', 'category33.id', 'document50.id'])
+    /**
+     * Example showing a way to use the same Odata query object to collect aggregates. 
+     * We aren't using Odata aggregate extension specs, instead we're directly using "internal" 
+     * odata-v4-typeorm functions to avoid also doing things like pagination and whatbot
+     */
+    app.get('/api/posts/aggregate', async (res, req) => {
+      const postRepo = getConnection().getRepository(Post)
+      const queryBuilder = postRepo.createQueryBuilder()
+      let query = req.req.query;
 
-        .leftJoinAndSelect('Post.author', 'author8', '1 = 1')
-        .leftJoinAndSelect('author8.document', 'document23', '1 = 1')
-        .leftJoinAndSelect('Post.category', 'category33', '1 = 1')
-        .leftJoin('category33.document', 'document50', '1 = 1')
+      // get the data as we normally would
+      let data = await executeQuery(queryBuilder.clone(), query, {})
 
-        .getMany().then((data) => {
-          req.status(200).json(data)
-        })
+      // Start a new querybuilder for the group by
+      let [newQueryBuilder, odataQuery] = await processBaseBuilder(queryBuilder.clone(), query, {});
+
+      // for the group by, we only need the joins and filter. Select, Pagination, etc should not be factored in. 
+      newQueryBuilder = await processIncludes(newQueryBuilder, odataQuery);
+      newQueryBuilder = await processFilter(newQueryBuilder, odataQuery);
+      let groupData =
+        await newQueryBuilder
+          .groupBy('Post.author_id')
+          .select('Post.author_id')
+          .addSelect("COUNT(*) AS count")
+          .getRawMany();
+
+      req.status(200).json({ groupData, data })
     });
 
     // Authors

@@ -23,9 +23,15 @@ const queryToOdataString = (query): string => {
   return result;
 };
 
-const processIncludes = (queryBuilder: any, odataQuery: any, alias: string, parent_metadata: any): [any, string] => {
+const processIncludes = async (queryBuilder: any, odataQuery: any, alias: string = null, parent_metadata: any = null): Promise<any> => {
+  if (!alias) {
+    alias = queryBuilder.expressionMap.mainAlias.name;
+  }
+  if (!parent_metadata) {
+    parent_metadata = queryBuilder.connection.getMetadata(alias);
+  }
   if (odataQuery.includes && odataQuery.includes.length > 0) {
-    odataQuery.includes.forEach(item => {
+    for (const item of odataQuery.includes) {
       const relation_metadata = queryBuilder.connection.getMetadata(parent_metadata.relations.find(x => x.propertyPath === item.navigationProperty).type)
       const join = item.select === '*' ? 'leftJoinAndSelect' : 'leftJoin';
       if (join === 'leftJoin') {
@@ -49,16 +55,16 @@ const processIncludes = (queryBuilder: any, odataQuery: any, alias: string, pare
       }
 
       if (item.includes && item.includes.length > 0) {
-        processIncludes(queryBuilder, { includes: item.includes }, item.alias, relation_metadata);
+        await processIncludes(queryBuilder, { includes: item.includes }, item.alias, relation_metadata);
       }
-    });
+    };
   }
 
   return queryBuilder;
 };
 
-const executeQueryByQueryBuilder = async (inputQueryBuilder, query, options: any) => {
-  const alias = inputQueryBuilder.expressionMap.mainAlias.name;
+const processBaseBuilder = async (queryBuilder, query, options) => {
+  const alias = queryBuilder.expressionMap.mainAlias.name;
   //const filter = createFilter(query.$filter, {alias: alias});
   let odataQuery: any = {};
   if (query) {
@@ -68,8 +74,36 @@ const executeQueryByQueryBuilder = async (inputQueryBuilder, query, options: any
     }
   }
 
-  let queryBuilder = inputQueryBuilder;
-  const metadata = inputQueryBuilder.connection.getMetadata(alias);
+  return [queryBuilder, odataQuery]
+}
+
+const processFilter = async (queryBuilder, odataQuery, options = null) => {
+  return queryBuilder
+    .andWhere(odataQuery.where)
+    .setParameters(mapToObject(odataQuery.parameters));
+}
+
+const processOrderBy = async (queryBuilder, odataQuery, options = null) => {
+  if (odataQuery.orderby && odataQuery.orderby !== '1') {
+    const orders = odataQuery.orderby.split(',').map(i => i.trim());
+    orders.forEach((item) => {
+      queryBuilder = queryBuilder.addOrderBy(...(item.split(' ')));
+    });
+  }
+  return queryBuilder;
+}
+
+const processPaging = async (queryBuilder, odataQuery, options = null) => {
+  queryBuilder = queryBuilder.skip(odataQuery.skip || 0);
+  if (odataQuery.limit) {
+    queryBuilder = queryBuilder.take(odataQuery.limit);
+  }
+  return queryBuilder
+}
+
+const processRootSelect = async (queryBuilder, odataQuery, options = null) => {
+  const alias = queryBuilder.expressionMap.mainAlias.name;
+  const metadata = queryBuilder.connection.getMetadata(alias);
   let root_select = []
 
   // unlike the relations which are done via leftJoin[AndSelect](), we must explicitly add root
@@ -80,24 +114,18 @@ const executeQueryByQueryBuilder = async (inputQueryBuilder, query, options: any
     root_select = odataQuery.select.split(',').map(x => x.trim())
   }
 
-  queryBuilder = queryBuilder.select(root_select);
+  return queryBuilder.select(root_select);
+}
 
-  queryBuilder = queryBuilder
-    .andWhere(odataQuery.where)
-    .setParameters(mapToObject(odataQuery.parameters));
+const executeQueryByQueryBuilder = async (inputQueryBuilder, query, options: any) => {
+  let [queryBuilder, odataQuery] = await processBaseBuilder(inputQueryBuilder, query, options);
 
-  queryBuilder = processIncludes(queryBuilder, odataQuery, alias, metadata);
+  queryBuilder = await processRootSelect(queryBuilder, odataQuery);
+  queryBuilder = await processIncludes(queryBuilder, odataQuery);
+  queryBuilder = await processFilter(queryBuilder, odataQuery)
+  queryBuilder = await processOrderBy(queryBuilder, odataQuery)
+  queryBuilder = await processPaging(queryBuilder, odataQuery)
 
-  if (odataQuery.orderby && odataQuery.orderby !== '1') {
-    const orders = odataQuery.orderby.split(',').map(i => i.trim());
-    orders.forEach((item) => {
-      queryBuilder = queryBuilder.addOrderBy(...(item.split(' ')));
-    });
-  }
-  queryBuilder = queryBuilder.skip(query.$skip || 0);
-  if (query.$top) {
-    queryBuilder = queryBuilder.take(query.$top);
-  }
   if (query.$count && query.$count !== 'false') {
     const resultData = await queryBuilder.getManyAndCount();
     return {
@@ -124,4 +152,4 @@ const executeQuery = async (repositoryOrQueryBuilder: any, query, options: any) 
   return result;
 };
 
-export { executeQuery };
+export { executeQuery, processBaseBuilder, processFilter, processPaging, processOrderBy, processRootSelect, processIncludes };
