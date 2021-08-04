@@ -23,6 +23,15 @@ const queryToOdataString = (query): string => {
   return result;
 };
 
+interface QueryOptions {
+  alias?: string;
+  /**
+   * Use limit() and offest() to paginate the results instead of the default take() and skip();
+   * Work around for https://github.com/typeorm/typeorm/issues/8014
+   */
+  useLimitOffset?: boolean;
+}
+
 const processIncludes = async (queryBuilder: any, odataQuery: any, alias: string = null, parent_metadata: any = null): Promise<any> => {
   if (!alias) {
     alias = queryBuilder.expressionMap.mainAlias.name;
@@ -93,10 +102,10 @@ const processOrderBy = async (queryBuilder, odataQuery, options = null) => {
   return queryBuilder;
 }
 
-const processPaging = async (queryBuilder, odataQuery, options = null) => {
-  queryBuilder = queryBuilder.skip(odataQuery.skip || 0);
+const processPaging = async (queryBuilder, odataQuery, options: QueryOptions) => {
+  queryBuilder = queryBuilder[options.useLimitOffset ? 'offset' : 'skip'](odataQuery.skip || 0);
   if (odataQuery.limit) {
-    queryBuilder = queryBuilder.take(odataQuery.limit);
+    queryBuilder = queryBuilder[options.useLimitOffset ? 'limit' : 'take'](odataQuery.limit);
   }
   return queryBuilder
 }
@@ -117,14 +126,14 @@ const processRootSelect = async (queryBuilder, odataQuery, options = null) => {
   return queryBuilder.select(root_select);
 }
 
-const executeQueryByQueryBuilder = async (inputQueryBuilder, query, options: any) => {
+const executeQueryByQueryBuilder = async (inputQueryBuilder, query, options: QueryOptions) => {
   let [queryBuilder, odataQuery] = await processBaseBuilder(inputQueryBuilder, query, options);
 
   queryBuilder = await processRootSelect(queryBuilder, odataQuery);
   queryBuilder = await processIncludes(queryBuilder, odataQuery);
   queryBuilder = await processFilter(queryBuilder, odataQuery)
   queryBuilder = await processOrderBy(queryBuilder, odataQuery)
-  queryBuilder = await processPaging(queryBuilder, odataQuery)
+  queryBuilder = await processPaging(queryBuilder, odataQuery, options)
 
   if (query.$count && query.$count !== 'false') {
     const resultData = await queryBuilder.getManyAndCount();
@@ -137,7 +146,7 @@ const executeQueryByQueryBuilder = async (inputQueryBuilder, query, options: any
   return queryBuilder.getMany();
 };
 
-const executeQuery = async (repositoryOrQueryBuilder: any, query, options: any) => {
+const executeQuery = async (repositoryOrQueryBuilder: any, query, options: QueryOptions) => {
   options = options || {};
   const alias = options.alias || '';
   let queryBuilder = null;
@@ -148,7 +157,7 @@ const executeQuery = async (repositoryOrQueryBuilder: any, query, options: any) 
   } else {
     queryBuilder = repositoryOrQueryBuilder.createQueryBuilder(alias);
   }
-  const result = await executeQueryByQueryBuilder(queryBuilder, query, { alias });
+  const result = await executeQueryByQueryBuilder(queryBuilder, query, options);
   return result;
 };
 
